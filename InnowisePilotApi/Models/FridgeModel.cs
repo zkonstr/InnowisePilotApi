@@ -6,7 +6,9 @@ namespace InnowisePilotApi.Models
     {
         [Key]
         public int FridgeModelId { get; set; }
+        [Required]
         public string FridgeModelName { get; set; }
+        [Required]
         public int ModelCreationYear { get; set; }
     }
 }

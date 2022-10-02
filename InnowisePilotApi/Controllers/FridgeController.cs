@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InnowisePilotApi.Data;
 using InnowisePilotApi.Models;
+using InnowisePilotApi.Services.Interfaces;
 
 namespace InnowisePilotApi.Controllers
 {
@@ -15,92 +16,56 @@ namespace InnowisePilotApi.Controllers
     public class FridgeController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private IFridgeService FridgeService { get; set; }
 
-        public FridgeController(ApplicationDbContext context)
+        public FridgeController(ApplicationDbContext context, IFridgeService fridgeService)
         {
+            FridgeService = fridgeService;
             _context = context;
         }
 
         // GET: api/Fridge
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Fridge>>> GetFridge()
-        {
-            return await _context.Fridge.ToListAsync();
-        }
+        public async Task<ActionResult<IEnumerable<Fridge>>> GetFridge() => await FridgeService.GetAllFridges();
 
         // GET: api/Fridge/id
         [HttpGet("{id}")]
-        public async Task<ActionResult<Fridge>> GetFridge(int id)
+        [ProducesResponseType(typeof(Fridge), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult GetById(int id)
         {
-            var fridge = await _context.Fridge.FindAsync(id);
-
-            if (fridge == null)
-            {
-                return NotFound();
-            }
-
-            return fridge;
+            var result = FridgeService.GetFridgeById(id);
+            return result == null ? NotFound() : Ok(result);
         }
 
         // PUT: api/Fridge/id
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutFridge(int id, Fridge fridge)
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        public IActionResult CreateFridge(Fridge fridge)
         {
-            if (id != fridge.FridgeId)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(fridge).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!FridgeExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            FridgeService.CreateFridge(fridge);
+            return CreatedAtAction(nameof(GetById), new { id = fridge.FridgeId}, fridge);
         }
-
-        // POST: api/Fridge
+        //POST: api/Fridge/id
         [HttpPost]
-        public async Task<ActionResult<Fridge>> PostFridge(Fridge fridge)
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        public IActionResult UpdateFridge(int id, Fridge fridge)
         {
-            _context.Fridge.Add(fridge);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetFridge", new { id = fridge.FridgeId }, fridge);
+            if (id != fridge.FridgeId) return BadRequest();
+            FridgeService.UpdateFridge(fridge);
+            return NoContent();
         }
 
         // DELETE: api/Fridge/id
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteFridge(int id)
         {
-            var fridge = await _context.Fridge.FindAsync(id);
-            if (fridge == null)
-            {
-                return NotFound();
-            }
-
-            _context.Fridge.Remove(fridge);
-            await _context.SaveChangesAsync();
-
+            var fridgeToDelete = await _context.Fridge.FindAsync(id);
+            if (fridgeToDelete == null) return NotFound();
+            await FridgeService.DeleteFridge(id);
             return NoContent();
-        }
-
-        private bool FridgeExists(int id)
-        {
-            return _context.Fridge.Any(e => e.FridgeId == id);
         }
     }
 }
