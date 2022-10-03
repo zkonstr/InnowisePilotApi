@@ -42,7 +42,7 @@ namespace InnowisePilotApi.Controllers
             var result = FridgeProductsService.GetFridgeProducstById(id);
             return result == null ? NotFound() : Ok(result);
         }
-        [HttpGet("{id}/fridge")]
+        [HttpGet("{id}/check-products")]
         [ProducesResponseType(typeof(Fridge), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<IEnumerable<FridgeProducts>>> GetProductsInFridge(int id)
