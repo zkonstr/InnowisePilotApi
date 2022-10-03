@@ -1,7 +1,12 @@
+using InnowisePilotApi.Data;
+using InnowisePilotApi.Models;
+using InnowisePilotApi.Services.Implementations;
+using InnowisePilotApi.Services.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -26,9 +31,14 @@ namespace InnowisePilotApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
+            services.AddTransient<IFridgeService, FridgeService>();
+            services.AddTransient<IFridgeProductsService, FridgeProductsService>();
+            services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseSqlServer(
+                Configuration.GetConnectionString("DefaultConnection")));
             services.AddControllers();
             services.AddSwaggerGen(c =>
+
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "InnowisePilotApi", Version = "v1" });
             });
